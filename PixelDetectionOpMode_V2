@@ -1,0 +1,127 @@
+package org.firstinspires.ftc.teamcode.IntoTheDeep;
+
+import android.util.Size;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+
+import java.util.concurrent.TimeUnit;
+
+import org.opencv.core.MatOfPoint3f;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfDouble;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Point3;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+
+@TeleOp
+public class PixelDetectionOpMode_V2 extends LinearOpMode {
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+
+        AprilTagProcessor tagProcessor = new AprilTagProcessor.Builder()
+                .setDrawAxes(true)
+                .setDrawCubeProjection(true)
+                .setDrawTagID(true)
+                .setDrawTagOutline(true)
+                //.setLensIntrinsics()
+                .build();
+
+        VisionPortal visionPortal = new VisionPortal.Builder()
+                .addProcessor(tagProcessor)
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam1"))
+                .setCameraResolution(new Size(640, 480))
+                .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
+                .build();
+
+        while (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {}
+
+        ExposureControl exposure = visionPortal.getCameraControl(ExposureControl.class);
+        exposure.setMode(ExposureControl.Mode.Manual);
+        exposure.setExposure(15, TimeUnit.MILLISECONDS);
+
+        GainControl gain = visionPortal.getCameraControl(GainControl.class);
+        gain.setGain(100); //  Quanto menor, mais escuro
+
+        //#########Inicialização das variáveis############
+
+        // Definição das cores
+        Scalar red = new Scalar(255, 0, 0);   // Cor Vermelha (BGR)
+        Scalar green = new Scalar(0, 255, 0); // Cor Verde (BGR)
+        Scalar blue = new Scalar(0, 0, 255);  // Cor Azul (BGR)
+        Scalar purple = new Scalar(255, 0, 255); // Cor Roxo (BGR)
+
+        // Espessura das linhas
+        int thickness = 10; //10
+
+        int side = 20; // Exemplo de valor //10
+
+        Mat buf = new Mat(480, 640, CvType.CV_8UC3, new Scalar(0, 0, 0));
+        Mat rvec = Mat.zeros(3, 1, CvType.CV_64FC1);
+        Mat tvec = Mat.zeros(3, 1, CvType.CV_64FC1);
+
+        Mat cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
+        cameraMatrix.put(0, 0, 800, 0, 320, 0, 800, 240, 0, 0, 1);
+
+        waitForStart();
+
+        while (!isStopRequested() && opModeIsActive()) {
+
+            if (tagProcessor.getDetections().size() > 0) {
+                AprilTagDetection tag = tagProcessor.getDetections().get(0);
+
+                // The points in 3D space we wish to project onto the 2D image plane.
+                // The origin of the coordinate space is assumed to be in the center of the detection.
+                
+                /*MatOfPoint3f axis = new MatOfPoint3f(
+                        new Point3(0,0,0),
+                        new Point3(length,0,0),
+                        new Point3(0,length,0),
+                        new Point3(0,0,-length)
+                );*/
+
+                MatOfPoint3f axis = new MatOfPoint3f(
+                        new Point3(-0.028-side*0.0375,-0.1-0.025,0),
+                        new Point3(+0.028-side*0.0375,-0.1-0.025,0),
+                        new Point3(+0.028-side*0.0375,-0.1+0.025,0),
+                        new Point3(-0.028-side*0.0375,-0.1+0.025,0)
+                );
+
+
+                // Project those points
+                MatOfPoint2f matProjectedPoints = new MatOfPoint2f();
+                Calib3d.projectPoints(axis, rvec, tvec, cameraMatrix, new MatOfDouble(), matProjectedPoints);
+                Point[] projectedPoints = matProjectedPoints.toArray();
+
+                // Draw the marker!
+                Imgproc.line(buf, projectedPoints[0], projectedPoints[1], red, thickness);
+                Imgproc.line(buf, projectedPoints[0], projectedPoints[2], green, thickness);
+                Imgproc.line(buf, projectedPoints[0], projectedPoints[3], blue, thickness);
+
+                Imgproc.circle(buf, projectedPoints[0], thickness, purple,  -1); 
+
+                telemetry.addLine(String.format("XYZ %6.2f %6.2f %6.2f", tag.ftcPose.x, tag.ftcPose.y, tag.ftcPose.z));
+
+                telemetry.addData("exposure", exposure.isExposureSupported());
+
+                telemetry.addData("roll", tag.ftcPose.roll);
+                telemetry.addData("pitch", tag.ftcPose.pitch);
+                telemetry.addData("yaw", tag.ftcPose.yaw);
+            }
+
+            telemetry.update();
+        }
+    }
+}
