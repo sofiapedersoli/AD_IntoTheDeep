@@ -41,6 +41,6 @@ public class ClawAngulator {
 
         // Define a posição dos servos para espelhamento automático
         claw1.setPosition(servoAngle);
-        claw2.setPosition(1 - servoAngle); // Posição espelhada para claw2
+        claw2.setPosition(0.8 - servoAngle); // Posição espelhada para claw2
     }
 }
