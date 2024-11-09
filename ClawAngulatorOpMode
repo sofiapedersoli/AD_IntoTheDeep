@@ -1,0 +1,38 @@
+package org.firstinspires.ftc.teamcode.INTOTHEDEEP;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+
+@TeleOp
+public class ClawAngulatorOpMode extends LinearOpMode {
+
+    private DcMotor braco;
+    private Servo claw1, claw2;
+    private ClawAngulator clawAngulator;
+
+    @Override
+    public void runOpMode() {
+        // Inicialização do hardware
+        braco = hardwareMap.get(DcMotor.class, "braco");
+        claw1 = hardwareMap.get(Servo.class, "claw1");
+        claw2 = hardwareMap.get(Servo.class, "claw2");
+
+        // Inicializa o objeto ClawAngulator
+        clawAngulator = new ClawAngulator(braco, claw1, claw2);
+
+        waitForStart();
+
+        while (opModeIsActive()) {
+            // Se o botão A do controle for pressionado, atualiza a posição da garra
+            if (gamepad1.a) {
+                clawAngulator.updateClawPosition();
+                telemetry.addData("Botão A", "Atualizando posição da garra");
+            }
+
+            telemetry.update();
+        }
+    }
+}
+
