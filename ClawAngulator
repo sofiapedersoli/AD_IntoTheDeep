@@ -1,0 +1,46 @@
+package org.firstinspires.ftc.teamcode.INTOTHEDEEP;
+
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
+
+public class ClawAngulator {
+
+    private DcMotor braco;    // Motor do braço com encoder
+    private Servo claw1, claw2; // Servos para controlar a garra
+
+    // Comprimento dos segmentos do braço (em mm)
+    private double L1 = 977; // comprimento do braço
+    private double L2 = 100; // comprimento da garra
+
+    // Construtor para inicializar os componentes
+    public ClawAngulator(DcMotor braco, Servo claw1, Servo claw2) {
+        this.braco = braco;
+        this.claw1 = claw1;
+        this.claw2 = claw2;
+
+        // Reset e configuração do encoder para o braço
+        this.braco.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        this.braco.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    // Função para atualizar a posição da garra com base na posição do braço
+    public void updateClawPosition() {
+        // Obtenção do valor atual do encoder do braço
+        double encoderValue = braco.getCurrentPosition();
+
+        // Converte o valor do encoder para um ângulo em radianos
+        double theta1 = (encoderValue / 1440) * Math.PI; // supondo 1440 ticks por rotação
+
+        // Calcula o ângulo da garra (theta2) para acompanhar o braço
+        double cosTheta2 = (L1 * Math.cos(theta1) + L2) / (L1 + L2);
+        double sinTheta2 = Math.sqrt(1 - cosTheta2 * cosTheta2);
+        double theta2 = Math.atan2(sinTheta2, cosTheta2);
+
+        // Converte theta2 para graus e o ajusta para a faixa de 0 a 1
+        double servoAngle = Math.toDegrees(theta2) / 180.0;
+
+        // Define a posição dos servos para espelhamento automático
+        claw1.setPosition(servoAngle);
+        claw2.setPosition(1 - servoAngle); // Posição espelhada para claw2
+    }
+}
