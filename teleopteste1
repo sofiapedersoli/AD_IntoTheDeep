@@ -1,0 +1,245 @@
+package org.firstinspires.ftc.teamcode.testes;
+
+import com.acmerobotics.dashboard.config.Config;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
+
+
+@Config
+@TeleOp
+public class teleopteste extends LinearOpMode {
+    //GARRA
+    private Servo claw1, claw2, claw;
+    private ClawAngulator clawAngulator;
+
+    private DcMotorEx leftFront, leftBack, rightBack, rightFront;
+    private DcMotorEx braco;
+    private DcMotorEx viper;
+    private PIDController bracocontroller;
+    private PIDController vipercontroller;
+
+    private VoltageSensor ControlHub_VoltageSensor;
+
+    //******************VARIÁVEIS*********************
+    // Movimentação do Chassi
+    float speedFactor = 1.5F;
+    double drive = 0;               // Potência de avanço desejada (-1 a +1)
+    double strafe = 0;              // Potência de strafe desejada (-1 a +1)
+    double turn = 0;                // Potência de rotação desejada (-1 a +1)
+
+    // BRAÇO
+    public static double p = 0.002, i = 0, d = 0.0001;
+    public static double f = 0.0004;
+    public static int target = 0;
+
+    double Kp = 0.0054;
+    double Kd = 0.0001;
+    int Ki = 0;
+    double vipertarget = 0;
+    boolean BRACO = false;
+
+    double servo = 0;
+
+    double viperBoost = 2; // Aumentar a vel do viper
+    boolean controle = false;
+
+    @Override
+    public void runOpMode() {
+        bracocontroller = new PIDController(p, i, d);
+        vipercontroller = new PIDController(Kp, Ki, Kd);
+        double ticks_in_degree = 2140 / 90.0;
+
+        // Inicializa os motores
+        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
+        rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
+        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        braco = hardwareMap.get(DcMotorImplEx.class, "braco");
+        viper = hardwareMap.get(DcMotorImplEx.class, "viper");
+        claw1 = hardwareMap.get(Servo.class, "claw1");
+        claw2 = hardwareMap.get(Servo.class, "claw2");
+        claw = hardwareMap.get(Servo.class, "claw");
+        ControlHub_VoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
+
+        // Define a direção dos motores
+        leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // Define o comportamento de zero potência dos motores
+        leftFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+
+        // Reset e leitura do encoder para o motor do braço
+        braco.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        braco.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER); // Não usa o controle automático do encoder
+        viper.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        viper.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        // Espera o início do OpMode
+        waitForStart();
+
+        clawAngulator = new ClawAngulator(braco, claw1, claw2);
+
+        // Loop de execução enquanto o opMode estiver ativo
+        while (opModeIsActive()) {
+
+            int viperpos = viper.getCurrentPosition();
+            double viperpid = vipercontroller.calculate(viperpos, vipertarget);
+            viperpid *= viperBoost;
+
+            // Atualiza a configuração do PID
+            bracocontroller.setPID(p, i, d);
+            vipercontroller.setPID(Kp, Ki, Kd);
+
+            // Calcula a posição do braço e o valor do PID
+            int bracoPos = braco.getCurrentPosition() * -1;
+            double pid = bracocontroller.calculate(bracoPos, target);
+            double ff = Math.cos(Math.toRadians(target / ticks_in_degree)) * f;
+
+            // CHASSI
+            drive = -gamepad1.left_stick_y / speedFactor;  // Reduz a taxa de avanço.
+            strafe = -gamepad1.left_stick_x / speedFactor; // Reduz a taxa de strafe.
+            turn = -gamepad1.right_stick_x / 3.0;          // Reduz a taxa de rotação.
+
+            moveRobot(drive, strafe, turn);
+
+            // BRACO e VIPER funções
+            moveBraco(pid + ff);
+            moveTarget();
+            moveViper(viperpid);
+            moveServo(servo);
+
+            if (controle == true){
+                clawAngulator.updateClawPosition();
+            }
+
+            if (BRACO == true){
+                if(viperpos < 700){
+                    target = 50;
+                    servo = 1;
+                }
+            }
+
+            if (gamepad2.right_trigger > 0) {
+                claw.setPosition(0);
+            } else {
+                claw.setPosition(1);
+            }
+
+            if (target > 300 && target < 1100) {
+                if (gamepad2.left_stick_y == 1) {
+                    viper.setPower(0.3);
+                } else if (gamepad2.left_stick_y == -1) {
+                    viper.setPower(-0.3);
+                }
+            }
+
+            if (ControlHub_VoltageSensor.getVoltage() < 6) {
+                break;
+            }
+
+            telemetry.addData("pos", bracoPos);
+            telemetry.addData("target", target);
+            telemetry.addData("viper", viperpos);
+            telemetry.addData("vipertarget", vipertarget);
+            telemetry.update();
+
+        }
+    }
+
+    //*******************FUNÇÕES**********************
+    public void moveRobot(double x, double y, double yaw) {
+        // Calcula a potência das rodas
+        double leftFrontPower = x - y - yaw;
+        double rightFrontPower = x + y + yaw;
+        double leftBackPower = x + y - yaw;
+        double rightBackPower = x - y + yaw;
+
+        // Normaliza as potências para serem menores que 1.0
+        double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
+        max = Math.max(max, Math.abs(leftBackPower));
+        max = Math.max(max, Math.abs(rightBackPower));
+
+        if (max > 1.0) {
+            leftFrontPower /= max;
+            rightFrontPower /= max;
+            leftBackPower /= max;
+            rightBackPower /= max;
+        }
+
+        // Ajusta o fator de velocidade com base nos gatilhos
+        if (gamepad1.right_trigger > 0) {
+            speedFactor = 1.1F;
+        } else if (gamepad1.left_trigger > 0) {
+            speedFactor = 4.5F;
+        } else {
+            speedFactor = 1.5F;
+        }
+
+        // Define a potência dos motores
+        leftFront.setPower(leftFrontPower);
+        rightFront.setPower(rightFrontPower);
+        leftBack.setPower(leftBackPower);
+        rightBack.setPower(rightBackPower);
+    }
+
+    public void moveBraco(double power) {
+        braco.setPower(power);
+    }
+
+    public void moveViper(double power) {
+        viper.setPower(power);
+    }
+
+    public void moveServo(double servoPosition) {
+        claw1.setPosition(servoPosition);
+        claw2.setPosition(servoPosition);
+        if (gamepad2.dpad_right){
+            servo = 1;
+        }
+        else if (gamepad2.dpad_up){
+            servo = 0.5;
+        }
+    }
+
+    public void moveTarget() {
+        if (gamepad2.b) { // estica pra frente e levanta um pouco o braco
+            target = 250;
+            vipertarget = 700;
+            BRACO = false;
+            controle = false;
+        }
+        if (gamepad2.y) {
+            target = 2300;
+            vipertarget = 1550; //1313 maior extensão
+            BRACO = false;
+            controle = false;
+            servo = 0.5;
+        }
+        if (gamepad2.a) {
+            servo = 0.2;
+            vipertarget = 5;
+            BRACO = false;
+            controle = false;
+        }
+        if (gamepad2.x) {
+            servo = 0.5;
+            vipertarget = 20;
+            BRACO = true;
+            controle = false;
+        }
+        if (gamepad2.dpad_left){
+            target = 1420;
+            controle = true;
+        }
+    }
+}
