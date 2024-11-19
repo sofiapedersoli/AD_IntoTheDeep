@@ -1,0 +1,199 @@
+package org.firstinspires.ftc.teamcode.testes;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
+import com.acmerobotics.roadrunner.InstantFunction;
+import com.acmerobotics.roadrunner.ParallelAction;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.MecanumDrive;
+
+@Autonomous(name = "IntoTheDeepAuton")
+public class traject2 extends LinearOpMode {
+    PIDController bracocontroler = new PIDController(p, i, d);
+    PIDController vipercontroller = new PIDController(Kp, Ki, Kd);
+
+    public static double
+            p = 0.002, d = 0.0001, i = 0.0, target = 0,
+            Kp = 0.0054, Kd = .0001, Ki = 0, vipertarget = 0;
+    public static double f = 0.0004;
+    public static double ticks_in_degree = 2140.0 / 90.0;
+
+    //BRACO
+    private DcMotorEx braco;
+    private DcMotorEx viper;
+
+
+    public class Motors {
+
+        // Inicializa os motores
+        public Motors(HardwareMap hardwareMap) {
+            // Configurações básicas para os motores dos bracos
+            braco = hardwareMap.get(DcMotorEx.class, "braco");
+            braco.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            braco.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+            viper = hardwareMap.get(DcMotorEx.class, "viper");
+            viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            viper.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
+
+
+    // Função instantânea para mover os motores para a posição de pontuar
+    public class Score implements InstantFunction {
+        @Override
+        public void run() {
+            target = 1400; // Alvo para o braco
+            vipertarget = 650; // Alvo para o viper
+        }
+    }
+
+    public InstantFunction score() {
+        return new Score();
+    }
+
+    // Função instantânea para retornar os motores para a posição inicial
+    public class Zero implements InstantFunction {
+        @Override
+        public void run() {
+            target = 20;
+            vipertarget = 0;
+        }
+    }
+
+    public InstantFunction zero() {
+        return new Zero();
+    }
+
+    // Atualização contínua dos slides com controle PID
+    public class viperUpdate implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            vipercontroller.setPID(Kp, Ki, Kd); // Configura PID
+            int viperPos = viper.getCurrentPosition(); // Lê posição atual
+            double pidviper = vipercontroller.calculate(viperPos, vipertarget); // Calcula correção
+            viper.setPower(pidviper); // Define potência
+            return Math.abs(viperPos - target) < 10; // Finaliza se estiver próximo do alvo
+        }
+    }
+
+    // Atualização contínua do braço com controle PID
+    public class bracoUpdate implements Action {
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            bracocontroler.setPID(p, i, d); // Configura PID
+            int armPos = braco.getCurrentPosition(); // Lê posição atual
+            double pidArm = bracocontroler.calculate(armPos, target); // Calcula correção
+            double ffArm = Math.cos(Math.toRadians(target / ticks_in_degree)) * f; // Adiciona feedforward
+            braco.setPower(pidArm + ffArm); // Aplica potência combinada
+            return Math.abs(armPos - target) < 10; // Finaliza se estiver próximo do alvo
+        }
+    }
+
+    public Action bracoUpdate() {
+        return new bracoUpdate();
+    }
+
+    public Action viperUpdate() {
+        return new viperUpdate();
+    }
+}
+
+    public class Garra {
+        //GARRA
+        private Servo claw1, claw2, claw;
+
+        public Garra(HardwareMap hardwareMap) {
+            claw1 = hardwareMap.get(Servo.class, "claw1");
+            claw2 = hardwareMap.get(Servo.class, "claw2");
+            claw = hardwareMap.get(Servo.class, "claw");
+        }
+
+        public class ClawOpen implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                claw.setPosition(1); // Abre garra
+                return true;
+            }
+        }
+
+        public Action clawOpen() { return new ClawOpen(); }
+
+        public class ClawClose implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                claw.setPosition(0); // fecha garra
+                return true;
+            }
+        }
+        public Action clawClose() { return new ClawClose(); }
+
+        public class Clipar implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                claw1.setPosition(0.1); // mover punho
+                claw2.setPosition(0.1);
+                return true;
+            }
+        }
+        public Action clipar() { return new Clipar(); }
+
+
+     }
+
+    @Override
+    public void runOpMode() throws InterruptedException {
+        // Inicializa subsistemas
+        MecanumDrive mecanumDrive = new MecanumDrive(hardwareMap, new Pose2d(-34, -62, Math.toRadians(90)));
+        Garra garra = new Garra(hardwareMap);
+        Motors motors = new Motors(hardwareMap);
+
+        // Define trajeto do robô
+        Action trajectoryAction1 = mecanumDrive.actionBuilder(mecanumDrive.pose)
+                .strafeToConstantHeading(new Vector2d(-10, -34))
+                .stopAndAdd(motors.score())
+                .waitSeconds(1)
+                .stopAndAdd(garra.clipar())
+                .stopAndAdd(garra.clawOpen())
+                .waitSeconds(1)
+                .stopAndAdd(motors.zero())
+                .strafeToConstantHeading(new Vector2d(-48, -48))
+                .waitSeconds(1)
+                .strafeToLinearHeading(new Vector2d( -52, -52), Math.toRadians(45))
+                .waitSeconds(1)
+                .stopAndAdd(motors.zero())
+                .build();
+
+        // Espera início da partida
+        waitForStart();
+
+        if (opModeIsActive() && !isStopRequested()) {
+            Actions.runBlocking(
+                    new ParallelAction(
+                            motors.viperUpdate(),
+                            motors.bracoUpdate(),
+                            new SequentialAction(trajectoryAction1)
+                    )
+            );
+        }
+    }
+}
+
+
