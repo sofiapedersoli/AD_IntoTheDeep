@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 @Config
 @TeleOp
-public class teleopteste extends LinearOpMode {
+public class teleop1 extends LinearOpMode {
     //GARRA
     private Servo claw1, claw2, claw;
     private ClawAngulator clawAngulator;
@@ -54,7 +54,7 @@ public class teleopteste extends LinearOpMode {
     public void runOpMode() {
         bracocontroller = new PIDController(p, i, d);
         vipercontroller = new PIDController(Kp, Ki, Kd);
-        double ticks_in_degree = 2140 / 90.0;
+        double ticks_in_degree = 2140.0 / 90.0;
         // Espera o início do OpMode
         waitForStart();
 
