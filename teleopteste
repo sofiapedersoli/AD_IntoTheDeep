@@ -107,7 +107,6 @@ public class teleopteste extends LinearOpMode {
             drive = -gamepad1.left_stick_y / speedFactor;
             strafe = -gamepad1.left_stick_x / speedFactor;
             turn = -gamepad1.right_stick_x / 3.0;
-
             moveRobot(drive, strafe, turn);
 
             // BRACO e VIPER funções
@@ -116,20 +115,20 @@ public class teleopteste extends LinearOpMode {
             moveViper(viperpid);
             moveServo(servo);
 
-            if (controle) {
+            /*if (controle) {
                 clawAngulator.updateClawAngulations();
-            }
+            }*/
 
-            if (gamepad2.dpad_right) {
+            if (gamepad2.right_bumper) {
                 servo = 0;
-            } else if (gamepad2.dpad_up) {
-                servo = 0.5;
+            } else if (gamepad2.left_bumper) {
+                servo = 0.7;
             }
 
             if (BRACO) {
                 if (viperpos < 700) {
-                    target = 50;
-                    servo = 1;
+                    target = 30;
+                    servo = 0.9;
                 }
             }
 
@@ -137,14 +136,6 @@ public class teleopteste extends LinearOpMode {
                 claw.setPosition(1);
             } else {
                 claw.setPosition(0);
-            }
-
-            if (target > 300 && target < 1100) {
-                if (gamepad2.left_stick_y == 1) {
-                    viper.setPower(0.3);
-                } else if (gamepad2.left_stick_y == -1) {
-                    viper.setPower(-0.3);
-                }
             }
 
             if (ControlHub_VoltageSensor.getVoltage() < 6) {
@@ -178,10 +169,11 @@ public class teleopteste extends LinearOpMode {
             rightBackPower /= max;
         }
 
+        // Controle de velocidade por zona
         if (gamepad1.right_trigger > 0) {
-            speedFactor = 1.1F;
-        } else if (gamepad1.left_trigger > 0) {
             speedFactor = 4.5F;
+        } else if (gamepad1.left_trigger > 0) {
+            speedFactor = 1.2F;
         } else {
             speedFactor = 1.5F;
         }
@@ -206,16 +198,36 @@ public class teleopteste extends LinearOpMode {
     }
 
     public void moveTarget() {
-        if (gamepad2.b) {
-            //SUBMERGIBLE
-            target = 250;
-            vipertarget = 800;
-            servo = 0.5;
+
+        if (gamepad2.a) {
+            //Volta geral
+            servo = 0.7;
+            vipertarget = -10;
             BRACO = false;
             controle = false;
         }
-        if (gamepad2.right_bumper){
-            target = 150;
+        if (gamepad2.a && gamepad2.right_trigger > 0) {
+            //Volta do basket alto
+            servo = 0.3;
+            vipertarget = -10;
+            BRACO = true;
+            controle = false;
+        }
+        if (gamepad2.b) {
+            //CLIP ALTO
+            target = 1250;
+            vipertarget = 1100;
+            servo = 0.2;
+            BRACO = false;
+            controle = false;
+        }
+        if (gamepad2.dpad_right) {
+            //CLIP BAIXO
+            target = 800;
+            vipertarget = 800;
+            servo = 0.2;
+            BRACO = false;
+            controle = false;
         }
         if (gamepad2.y) {
             //BASKET ALTO
@@ -225,37 +237,41 @@ public class teleopteste extends LinearOpMode {
             controle = false;
             servo = 0.3; //quanto menor, mais reto
         }
-        if (gamepad2.a) {
-            //VOLTA SUBMERGIBLE
-            servo = 0.7;
-            vipertarget = 5;
-            BRACO = true;
+        if (gamepad2.dpad_left) {
+            //BASKET BAIXO
+            /*target = 2300;
+            vipertarget = 1550;
+            BRACO = false;
             controle = false;
+            servo = 0.3; //quanto menor, mais reto*/
         }
         if (gamepad2.x) {
-            //VOLTA BASKET ALTO e CLIP ALTO
-            servo = 0.7;
-            vipertarget = 20;
-            BRACO = true;
-            controle = false;
-        }
-        if (gamepad2.dpad_left) {
-            //CLIP ALTO
-            target = 1150;
-            vipertarget = 1100;
-            servo = 0.2;
+            //SUBMERGIBLE
+            target = 350;
+            vipertarget = 800;
+            servo = 0.5;
             BRACO = false;
             controle = false;
         }
-        if (gamepad2.left_bumper){
+        if (gamepad2.left_trigger > 0){
+            // Abaixada para pegar sample no chão
+            target = 150;
+        }
+        if (gamepad2.dpad_up){
+            // Abaixada da clipagem no baixo
+            target = 500;
+            vipertarget = 700;
+        }
+        if (gamepad2.dpad_down){
+            // Abaixada da clipagem no alto
             target = 700;
             vipertarget = 1000;
         }
-        if (gamepad1.b){
+        if (gamepad2.b && gamepad2.right_trigger > 0){
+            // Coleta de specimen na borda
             target = 550;
             vipertarget = 500;
             servo = 0.4;
         }
-
     }
 }
