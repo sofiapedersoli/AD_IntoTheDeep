@@ -32,7 +32,7 @@ public class traject2 extends LinearOpMode {
 
     public static double
             p = 0.002, d = 0.0001, i = 0.0, target = 0,
-            Kp = 0.0054, Kd = .0001, Ki = 0, vipertarget = 0;
+            Kp = 0.0046, Kd = 0.0001, Ki = 0, vipertarget = 0;
     public static double f = 0.0004;
     public static double ticks_in_degree = 2140.0 / 90.0;
 
@@ -60,7 +60,7 @@ public class traject2 extends LinearOpMode {
     public class Score implements InstantFunction {
         @Override
         public void run() {
-            target = 1400; // Alvo para o braco
+            target = 1525; // Alvo para o braco
             vipertarget = 650; // Alvo para o viper
         }
     }
@@ -86,11 +86,10 @@ public class traject2 extends LinearOpMode {
     public class viperUpdate implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            vipercontroller.setPID(Kp, Ki, Kd); // Configura PID
             int viperPos = viper.getCurrentPosition(); // Lê posição atual
             double pidviper = vipercontroller.calculate(viperPos, vipertarget); // Calcula correção
             viper.setPower(pidviper); // Define potência
-            return Math.abs(viperPos - target) < 10; // Finaliza se estiver próximo do alvo
+            return Math.abs(viperPos - target) < 30; // Finaliza se estiver próximo do alvo
         }
     }
 
@@ -98,12 +97,11 @@ public class traject2 extends LinearOpMode {
     public class bracoUpdate implements Action {
         @Override
         public boolean run(@NonNull TelemetryPacket packet) {
-            bracocontroler.setPID(p, i, d); // Configura PID
             int armPos = braco.getCurrentPosition(); // Lê posição atual
             double pidArm = bracocontroler.calculate(armPos, target); // Calcula correção
             double ffArm = Math.cos(Math.toRadians(target / ticks_in_degree)) * f; // Adiciona feedforward
             braco.setPower(pidArm + ffArm); // Aplica potência combinada
-            return Math.abs(armPos - target) < 10; // Finaliza se estiver próximo do alvo
+            return Math.abs(armPos - target) < 70; // Finaliza se estiver próximo do alvo
         }
     }
 
@@ -164,10 +162,12 @@ public class traject2 extends LinearOpMode {
         MecanumDrive mecanumDrive = new MecanumDrive(hardwareMap, new Pose2d(-34, -62, Math.toRadians(90)));
         Garra garra = new Garra(hardwareMap);
         Motors motors = new Motors(hardwareMap);
+        vipercontroller.setPID(Kp, Ki, Kd); // Configura PID
+        bracocontroler.setPID(p, i, d); // Configura PID
 
         // Define trajeto do robô
         Action trajectoryAction1 = mecanumDrive.actionBuilder(mecanumDrive.pose)
-                .strafeToConstantHeading(new Vector2d(-10, -34))
+                .strafeToConstantHeading(new Vector2d(-9, -36))
                 .stopAndAdd(motors.score())
                 .waitSeconds(1)
                 .stopAndAdd(garra.clipar())
@@ -183,15 +183,12 @@ public class traject2 extends LinearOpMode {
 
         // Espera início da partida
         waitForStart();
-
-        if (opModeIsActive() && !isStopRequested()) {
-            Actions.runBlocking(
-                    new ParallelAction(
-                            motors.viperUpdate(),
-                            motors.bracoUpdate(),
-                            new SequentialAction(trajectoryAction1)
-                    )
-            );
+        while (opModeIsActive()) {
+            motors.bracoUpdate();
+            motors.viperUpdate();
+            if (opModeIsActive() && !isStopRequested()) {
+                Actions.runBlocking(trajectoryAction1);
+            }
         }
     }
 }
