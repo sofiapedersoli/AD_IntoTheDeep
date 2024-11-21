@@ -27,14 +27,14 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 @Autonomous(name = "IntoTheDeepAuton")
 public class traject2 extends LinearOpMode {
-    PIDController bracocontroler = new PIDController(p, i, d);
-    PIDController vipercontroller = new PIDController(Kp, Ki, Kd);
-
     public static double
             p = 0.002, d = 0.0001, i = 0.0, target = 0,
             Kp = 0.0046, Kd = 0.0001, Ki = 0, vipertarget = 0;
     public static double f = 0.0004;
     public static double ticks_in_degree = 2140.0 / 90.0;
+
+    PIDController bracocontroler = new PIDController(p, i, d);
+    PIDController vipercontroller = new PIDController(Kp, Ki, Kd);
 
     //BRACO
     private DcMotorEx braco;
@@ -56,63 +56,63 @@ public class traject2 extends LinearOpMode {
         }
 
 
-    // Função instantânea para mover os motores para a posição de pontuar
-    public class Score implements InstantFunction {
-        @Override
-        public void run() {
-            target = 1525; // Alvo para o braco
-            vipertarget = 650; // Alvo para o viper
+        // Função instantânea para mover os motores para a posição de pontuar
+        public class Score implements InstantFunction {
+            @Override
+            public void run() {
+                target = 1525; // Alvo para o braco
+                vipertarget = 650; // Alvo para o viper
+            }
+        }
+
+        public InstantFunction score() {
+            return new Score();
+        }
+
+        // Função instantânea para retornar os motores para a posição inicial
+        public class Zero implements InstantFunction {
+            @Override
+            public void run() {
+                target = 20;
+                vipertarget = 0;
+            }
+        }
+
+        public InstantFunction zero() {
+            return new Zero();
+        }
+
+        // Atualização contínua dos slides com controle PID
+        public class viperUpdate implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                int viperPos = viper.getCurrentPosition(); // Lê posição atual
+                double pidviper = vipercontroller.calculate(viperPos, vipertarget); // Calcula correção
+                viper.setPower(pidviper); // Define potência
+                return Math.abs(viperPos - target) < 30; // Finaliza se estiver próximo do alvo
+            }
+        }
+
+        // Atualização contínua do braço com controle PID
+        public class bracoUpdate implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                int armPos = braco.getCurrentPosition() * -1; // Lê posição atual
+                double pidArm = bracocontroler.calculate(armPos, target); // Calcula correção
+                double ffArm = Math.cos(Math.toRadians(target / ticks_in_degree)) * f; // Adiciona feedforward
+                braco.setPower(pidArm + ffArm); // Aplica potência combinada
+                return Math.abs(armPos - target) < 70; // Finaliza se estiver próximo do alvo
+            }
+        }
+
+        public Action bracoUpdate() {
+            return new bracoUpdate();
+        }
+
+        public Action viperUpdate() {
+            return new viperUpdate();
         }
     }
-
-    public InstantFunction score() {
-        return new Score();
-    }
-
-    // Função instantânea para retornar os motores para a posição inicial
-    public class Zero implements InstantFunction {
-        @Override
-        public void run() {
-            target = 20;
-            vipertarget = 0;
-        }
-    }
-
-    public InstantFunction zero() {
-        return new Zero();
-    }
-
-    // Atualização contínua dos slides com controle PID
-    public class viperUpdate implements Action {
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet) {
-            int viperPos = viper.getCurrentPosition(); // Lê posição atual
-            double pidviper = vipercontroller.calculate(viperPos, vipertarget); // Calcula correção
-            viper.setPower(pidviper); // Define potência
-            return Math.abs(viperPos - target) < 30; // Finaliza se estiver próximo do alvo
-        }
-    }
-
-    // Atualização contínua do braço com controle PID
-    public class bracoUpdate implements Action {
-        @Override
-        public boolean run(@NonNull TelemetryPacket packet) {
-            int armPos = braco.getCurrentPosition(); // Lê posição atual
-            double pidArm = bracocontroler.calculate(armPos, target); // Calcula correção
-            double ffArm = Math.cos(Math.toRadians(target / ticks_in_degree)) * f; // Adiciona feedforward
-            braco.setPower(pidArm + ffArm); // Aplica potência combinada
-            return Math.abs(armPos - target) < 70; // Finaliza se estiver próximo do alvo
-        }
-    }
-
-    public Action bracoUpdate() {
-        return new bracoUpdate();
-    }
-
-    public Action viperUpdate() {
-        return new viperUpdate();
-    }
-}
 
     public class Garra {
         //GARRA
@@ -132,7 +132,9 @@ public class traject2 extends LinearOpMode {
             }
         }
 
-        public Action clawOpen() { return new ClawOpen(); }
+        public Action clawOpen() {
+            return new ClawOpen();
+        }
 
         public class ClawClose implements Action {
             @Override
@@ -141,7 +143,10 @@ public class traject2 extends LinearOpMode {
                 return true;
             }
         }
-        public Action clawClose() { return new ClawClose(); }
+
+        public Action clawClose() {
+            return new ClawClose();
+        }
 
         public class Clipar implements Action {
             @Override
@@ -151,10 +156,33 @@ public class traject2 extends LinearOpMode {
                 return true;
             }
         }
-        public Action clipar() { return new Clipar(); }
 
+        public Action clipar() {
+            return new Clipar();
+        }
+    }
 
-     }
+    public class TrajectoryCompletionAction implements Action {
+        private final Action trajectory;
+        private boolean isCompleted;
+
+        public TrajectoryCompletionAction(Action trajectory) {
+            this.trajectory = trajectory;
+            this.isCompleted = false;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket packet) {
+            // Executa a trajetória
+            isCompleted = trajectory.run(packet);
+            return isCompleted; // Retorna true se a trajetória foi concluída
+        }
+
+        public boolean isCompleted() {
+            return isCompleted;
+        }
+    }
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -176,18 +204,28 @@ public class traject2 extends LinearOpMode {
                 .stopAndAdd(motors.zero())
                 .strafeToConstantHeading(new Vector2d(-48, -48))
                 .waitSeconds(1)
-                .strafeToLinearHeading(new Vector2d( -52, -52), Math.toRadians(45))
+                .strafeToLinearHeading(new Vector2d(-52, -52), Math.toRadians(45))
                 .waitSeconds(1)
                 .stopAndAdd(motors.zero())
                 .build();
 
+        // Encapsula a trajetória na classe TrajectoryCompletionAction
+        TrajectoryCompletionAction trajectoryCompletionAction = new TrajectoryCompletionAction(trajectoryAction1);
+
         // Espera início da partida
         waitForStart();
+
         while (opModeIsActive()) {
-            motors.bracoUpdate();
-            motors.viperUpdate();
-            if (opModeIsActive() && !isStopRequested()) {
-                Actions.runBlocking(trajectoryAction1);
+            // Atualiza continuamente o braço e o viper
+            motors.bracoUpdate().run(new TelemetryPacket());
+            motors.viperUpdate().run(new TelemetryPacket());
+
+            // Executa a trajetória encapsulada
+            boolean trajectoryFinished = trajectoryCompletionAction.run(new TelemetryPacket());
+
+            // Interrompe o loop se a trajetória estiver concluída
+            if (trajectoryFinished) {
+                break;
             }
         }
     }
