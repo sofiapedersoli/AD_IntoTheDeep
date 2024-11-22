@@ -18,11 +18,11 @@ public class redbascket {
 
         myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-35, -60, Math.PI/2))
 
-                .strafeToConstantHeading(new Vector2d(-10, -34))
+                .strafeToConstantHeading(new Vector2d(-9, -36))
                 .waitSeconds(1)
-                .strafeToConstantHeading(new Vector2d(-47, -48))
+                .strafeToConstantHeading(new Vector2d(-50, -48))
                 .waitSeconds(1)
-                .strafeToLinearHeading(new Vector2d( -52, -52), Math.PI/4)
+                .strafeToLinearHeading(new Vector2d( -59, -56), Math.PI/4)
                 .waitSeconds(2)
                 .strafeToLinearHeading(new Vector2d( -58, -46), Math.PI/2)
                 .waitSeconds(1)
