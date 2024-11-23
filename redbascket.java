@@ -1,4 +1,4 @@
-package com.example.meepmeep;
+package com.example.meepmeeptesting;
 
 
 import com.acmerobotics.roadrunner.Pose2d;
@@ -7,7 +7,7 @@ import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
-public class redbascket {
+public class MeepTest {
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(690);
 
@@ -16,7 +16,7 @@ public class redbascket {
                 .setConstraints(40, 40, Math.toRadians(180), Math.toRadians(0), 11)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-35, -60, Math.PI/2))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-33, -62, Math.PI/2))
 
                 .strafeToConstantHeading(new Vector2d(-9, -36))
                 .waitSeconds(1)
