@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.testes;
+package org.firstinspires.ftc.teamcode.INTOTHEDEEP.Movimentação;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.arcrobotics.ftclib.controller.PIDController;
@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
 @TeleOp
-public class teleop1 extends LinearOpMode {
+public class teleopteste extends LinearOpMode {
 
     private DcMotorEx leftFront, leftBack, rightBack, rightFront;
     private DcMotorEx braco;
@@ -132,7 +132,7 @@ public class teleop1 extends LinearOpMode {
 
             if (BRACO) {
                 if (viperpos < 700) {
-                    target = 30;
+                    target = 100; //30
                     servo = 0.9;
                 }
             }
@@ -253,11 +253,30 @@ public class teleop1 extends LinearOpMode {
             seguY = true;
         }
         if (gamepad2.x) {
-            //SUBMERGIBLE
+            //SUBMERGIBLE MÉDIO
             if (!seguY){
                 target = 350;
                 vipertarget = 800;
                 servo = 0.5;
+                BRACO = false;
+                controle = false;
+            }
+        }
+        if (gamepad1.dpad_up) {
+            //SUBMERGIBLE MAIS
+            if (!seguY){
+                target = 350;
+                vipertarget = 1100;
+                BRACO = false;
+                controle = false;
+            }
+        }
+        if (gamepad2.dpad_left) {
+            //SUBMERGIBLE MENOS
+            if (!seguY){
+                target = 350; 
+                vipertarget = 500;
+                servo = 0;
                 BRACO = false;
                 controle = false;
             }
