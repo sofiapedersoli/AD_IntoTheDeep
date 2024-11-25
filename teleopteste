@@ -1,8 +1,9 @@
-package org.firstinspires.ftc.teamcode.INTOTHEDEEP.Movimentação;
+package org.firstinspires.ftc.teamcode.testes;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorImplEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -12,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
 @TeleOp
-public class teleopteste extends LinearOpMode {
+public class teleop1 extends LinearOpMode {
 
     private DcMotorEx leftFront, leftBack, rightBack, rightFront;
     private DcMotorEx braco;
@@ -23,7 +24,7 @@ public class teleopteste extends LinearOpMode {
     private PIDController bracocontroller;
     private PIDController vipercontroller;
 
-    //******************VARIÁVEIS*********************
+    //*******VARIÁVEIS********
 
     // Movimentação do chassi
     float speedFactor = 1.5F;
@@ -88,10 +89,10 @@ public class teleopteste extends LinearOpMode {
         rightFront.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         // Reset e leitura do encoder para o motor do braço
-        braco.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        braco.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        viper.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-        viper.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        braco.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        braco.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        viper.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Loop de execução enquanto o opMode estiver ativo
         while (opModeIsActive()) {
@@ -155,7 +156,7 @@ public class teleopteste extends LinearOpMode {
         }
     }
 
-    //*******************FUNÇÕES**********************
+    //******FUNÇÕES*******
     public void moveRobot(double x, double y, double yaw) {
         double leftFrontPower = x - y - yaw;
         double rightFrontPower = x + y + yaw;
@@ -174,9 +175,9 @@ public class teleopteste extends LinearOpMode {
         }
 
         // Controle de velocidade por zona
-        if (gamepad1.right_trigger > 0) {
-            speedFactor = 4.5F;
-        } else if (gamepad1.left_trigger > 0) {
+        if (gamepad1.left_trigger > 0) {
+            speedFactor = 4.8F;
+        } else if (gamepad1.right_trigger > 0) {
             speedFactor = 1.2F;
         } else {
             speedFactor = 1.5F;
@@ -207,24 +208,24 @@ public class teleopteste extends LinearOpMode {
             //Volta geral
             if (!seguY){
                 servo = 0.7;
-                vipertarget = 20;
+                vipertarget = 5;
                 BRACO = true;
                 controle = false;
             }
         }
         if (gamepad2.b && gamepad2.right_trigger > 0) {
             //Volta do basket alto
-                servo = 0.3;
-                vipertarget = 20;
-                BRACO = true;
-                controle = false;
-                seguY = false;
+            servo = 0.3;
+            vipertarget = 20;
+            BRACO = true;
+            controle = false;
+            seguY = false;
         }
         if (gamepad2.a) {
             //CLIP ALTO
             if (!seguY){
                 target = 1200;
-                vipertarget = 1100;
+                vipertarget = 1000;
                 servo = 0.2;
                 BRACO = false;
                 controle = false;
@@ -244,21 +245,13 @@ public class teleopteste extends LinearOpMode {
         }
         if (gamepad2.y) {
             //BASKET ALTO
-                target = 2300;
-                vipertarget = 1550;
-                BRACO = false;
-                controle = false;
-                servo = 0.3; //quanto menor, mais reto
-                seguY = true;
-        }
-        /*if (gamepad2.dpad_left) {
-            //BASKET BAIXO
             target = 2300;
             vipertarget = 1550;
             BRACO = false;
             controle = false;
             servo = 0.3; //quanto menor, mais reto
-        }*/
+            seguY = true;
+        }
         if (gamepad2.x) {
             //SUBMERGIBLE
             if (!seguY){
@@ -300,6 +293,19 @@ public class teleopteste extends LinearOpMode {
                 vipertarget = 500;
                 servo = 0.4;
             }
+        }
+        if (gamepad1.b) {
+            //abaixa braco pra resetar
+            target = -965;
+            vipertarget = -785;
+        }
+        if (gamepad1.back){
+            braco.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            braco.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            viper.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            viper.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            target = 0;
+            vipertarget = 0;
         }
     }
 }
