@@ -49,7 +49,7 @@ public class teleopteste extends LinearOpMode {
 
     boolean voltaclip = false;
 
-    boolean seguY = false;
+    int trava = 0;
 
     @Override
     public void runOpMode() {
@@ -127,12 +127,12 @@ public class teleopteste extends LinearOpMode {
             if (gamepad2.right_bumper) {
                 servo = 0;
             } else if (gamepad2.left_bumper) {
-                servo = 0.7;
+                servo = 0.8;
             }
 
             if (BRACO) {
                 if (viperpos < 700) {
-                    target = 100; //30
+                    target = 200; //30
                     servo = 0.9;
                 }
             }
@@ -206,24 +206,27 @@ public class teleopteste extends LinearOpMode {
 
         if (gamepad2.b) {
             //Volta geral
-            if (!seguY){
+            if (trava != 1){
                 servo = 0.7;
                 vipertarget = 5;
                 BRACO = true;
                 controle = false;
+                trava = 0;
             }
         }
         if (gamepad2.b && gamepad2.right_trigger > 0) {
             //Volta do basket alto
-            servo = 0.3;
-            vipertarget = 20;
-            BRACO = true;
-            controle = false;
-            seguY = false;
+            if (trava == 1) {
+                servo = 0.3;
+                vipertarget = 20;
+                BRACO = true;
+                controle = false;
+                trava = 0;
+            }
         }
         if (gamepad2.a) {
             //CLIP ALTO
-            if (!seguY){
+            if (trava == 0){
                 target = 1200;
                 vipertarget = 1000;
                 servo = 0.2;
@@ -234,7 +237,7 @@ public class teleopteste extends LinearOpMode {
         }
         if (gamepad2.dpad_right) {
             //CLIP BAIXO
-            if (!seguY){
+            if (trava == 0){
                 target = 800;
                 vipertarget = 800;
                 servo = 0.2;
@@ -245,26 +248,29 @@ public class teleopteste extends LinearOpMode {
         }
         if (gamepad2.y) {
             //BASKET ALTO
-            target = 2300;
-            vipertarget = 1550;
-            BRACO = false;
-            controle = false;
-            servo = 0.3; //quanto menor, mais reto
-            seguY = true;
+            if (trava == 0) {
+                target = 2300;
+                vipertarget = 1550;
+                BRACO = false;
+                controle = false;
+                servo = 0.3; // quanto menor, mais reto
+                trava = 1;
+            }
         }
         if (gamepad2.x) {
             //SUBMERGIBLE MÉDIO
-            if (!seguY){
+            if (trava != 1){
                 target = 350;
                 vipertarget = 800;
-                servo = 0.5;
+                servo = 0;
                 BRACO = false;
                 controle = false;
+                trava = 2;
             }
         }
         if (gamepad1.dpad_up) {
             //SUBMERGIBLE MAIS
-            if (!seguY){
+            if (trava == 2){
                 target = 350;
                 vipertarget = 1100;
                 BRACO = false;
@@ -273,8 +279,8 @@ public class teleopteste extends LinearOpMode {
         }
         if (gamepad2.dpad_left) {
             //SUBMERGIBLE MENOS
-            if (!seguY){
-                target = 350; 
+            if (trava !=1){
+                target = 350;
                 vipertarget = 500;
                 servo = 0;
                 BRACO = false;
@@ -283,19 +289,19 @@ public class teleopteste extends LinearOpMode {
         }
         if (gamepad2.left_trigger > 0){
             // Abaixada para pegar sample no chão
-            if (!seguY){
+            if (trava == 0){
                 target = 150;
             }
         }
         if (gamepad2.dpad_up) {
             // Subidinha do clipe da borda
-            if (!seguY){
+            if (trava == 0){
                 target = 750;
             }
         }
         if (gamepad2.dpad_down){
             // Abaixada da clipagem no alto e baixo
-            if (!seguY){
+            if (trava == 0){
                 if (voltaclip){
                     target = 400;
                     vipertarget = 700;
@@ -307,7 +313,7 @@ public class teleopteste extends LinearOpMode {
         }
         if (gamepad2.a && gamepad2.right_trigger > 0){
             // Coleta de specimen na borda
-            if (!seguY) {
+            if (trava == 0){
                 target = 550;
                 vipertarget = 500;
                 servo = 0.4;
