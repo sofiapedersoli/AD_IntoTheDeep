@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.INTOTHEDEEP.Movimentação;
+package org.firstinspires.ftc.teamcode.INTOTHEDEEP.Regional;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.arcrobotics.ftclib.controller.PIDController;
@@ -13,14 +13,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 @Config
 @TeleOp
-public class teleopteste extends LinearOpMode {
+public class TELEOP_Regional extends LinearOpMode {
 
     private DcMotorEx leftFront, leftBack, rightBack, rightFront;
     private DcMotorEx braco;
     private DcMotorEx viper;
     private Servo claw1, claw2, claw;
     private VoltageSensor ControlHub_VoltageSensor;
-    private ClawAngulator clawAngulator;
     private PIDController bracocontroller;
     private PIDController vipercontroller;
 
@@ -45,10 +44,9 @@ public class teleopteste extends LinearOpMode {
 
     // Movimentação da garra
     double servo = 0.9;
-    boolean controle = false;
 
+    //Controles
     boolean voltaclip = false;
-
     int trava = 0;
 
     @Override
@@ -72,10 +70,7 @@ public class teleopteste extends LinearOpMode {
         claw2 = hardwareMap.get(Servo.class, "claw2");
         claw = hardwareMap.get(Servo.class, "claw");
         ControlHub_VoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
-
-        // Chamado função externa da garra
-        clawAngulator = new ClawAngulator(braco, claw1, claw2);
-
+        
         // Define a direção dos motores
         leftFront.setDirection(DcMotorSimple.Direction.FORWARD);
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -96,6 +91,7 @@ public class teleopteste extends LinearOpMode {
 
         // Loop de execução enquanto o opMode estiver ativo
         while (opModeIsActive()) {
+            
             int viperpos = viper.getCurrentPosition();
             double viperpid = vipercontroller.calculate(viperpos, vipertarget);
             viperpid *= viperBoost;
@@ -120,16 +116,14 @@ public class teleopteste extends LinearOpMode {
             moveViper(viperpid);
             moveServo(servo);
 
-            /*if (controle) {
-                clawAngulator.updateClawAngulations();
-            }*/
-
+            //Controle do pulso
             if (gamepad2.right_bumper) {
                 servo = 0;
             } else if (gamepad2.left_bumper) {
                 servo = 0.8;
             }
 
+            //Controle automático do braço
             if (BRACO) {
                 if (viperpos < 700) {
                     target = 200; //30
@@ -137,16 +131,12 @@ public class teleopteste extends LinearOpMode {
                 }
             }
 
-            if (gamepad2.right_trigger > 0) {
-                claw.setPosition(1);
-            } else {
-                claw.setPosition(0);
-            }
-
+            // Controle de voltagem da bateria
             if (ControlHub_VoltageSensor.getVoltage() < 6) {
                 break;
             }
 
+            //Telemetrias
             telemetry.addData("pos", bracoPos);
             telemetry.addData("target", target);
             telemetry.addData("viper", viperpos);
@@ -204,102 +194,117 @@ public class teleopteste extends LinearOpMode {
 
     public void moveTarget() {
 
-        if (gamepad2.b) {
-            //Volta geral
+        int viperPosi = viper.getCurrentPosition();
+
+        if (gamepad2.b) { 
+            // VOLTA GERAL
             if (trava != 1){
-                servo = 0.7;
                 vipertarget = 5;
                 BRACO = true;
-                controle = false;
                 trava = 0;
             }
         }
-        if (gamepad2.b && gamepad2.right_trigger > 0) {
-            //Volta do basket alto
+        
+        if (gamepad2.right_trigger > 0) { 
+            // CONTROLE DO PULSO
+            claw.setPosition(1);
+        } else {
+            claw.setPosition(0);
+        }
+        
+        if (gamepad2.b && gamepad2.right_trigger > 0) { 
+            // VOLTA DA CESTA ALTA
             if (trava == 1) {
-                servo = 0.3;
+                servo = 0;
                 vipertarget = 20;
-                BRACO = true;
-                controle = false;
+                if (viperPosi < 700) {
+                    target = 200;
+                }
+                BRACO = false;
                 trava = 0;
             }
         }
-        if (gamepad2.a) {
-            //CLIP ALTO
+        
+        if (gamepad2.a) { 
+            // CLIPAGEM NO  ALTO
             if (trava == 0){
                 target = 1200;
                 vipertarget = 1000;
                 servo = 0.2;
                 BRACO = false;
-                controle = false;
                 voltaclip = false;
             }
         }
-        if (gamepad2.dpad_right) {
-            //CLIP BAIXO
+        
+        if (gamepad2.dpad_right) { 
+            // CLIPAGEM NO BAIXO
             if (trava == 0){
                 target = 800;
                 vipertarget = 800;
                 servo = 0.2;
                 BRACO = false;
-                controle = false;
                 voltaclip = true;
             }
         }
-        if (gamepad2.y) {
-            //BASKET ALTO
+        
+        if (gamepad2.y) { 
+            // CESTA ALTO
             if (trava == 0) {
                 target = 2300;
                 vipertarget = 1550;
                 BRACO = false;
-                controle = false;
-                servo = 0.3; // quanto menor, mais reto
+                servo = 0.3;
                 trava = 1;
             }
         }
-        if (gamepad2.x) {
-            //SUBMERGIBLE MÉDIO
+        
+        if (gamepad2.x) { 
+            // SUBMERGIBLE MÉDIO
             if (trava != 1){
                 target = 350;
                 vipertarget = 800;
                 servo = 0;
                 BRACO = false;
-                controle = false;
                 trava = 2;
             }
         }
-        if (gamepad1.dpad_up) {
-            //SUBMERGIBLE MAIS
-            if (trava == 2){
+        
+        if (gamepad1.dpad_up) { 
+            // SUBMERGIBLE MAIS
+            if (trava !=1) {
                 target = 350;
                 vipertarget = 1100;
                 BRACO = false;
-                controle = false;
+                trava = 2;
             }
         }
-        if (gamepad2.dpad_left) {
-            //SUBMERGIBLE MENOS
+        
+        if (gamepad2.dpad_left) { 
+            // SUBMERGIBLE MENOS
             if (trava !=1){
                 target = 350;
                 vipertarget = 500;
                 servo = 0;
                 BRACO = false;
-                controle = false;
+                trava = 2;
             }
         }
-        if (gamepad2.left_trigger > 0){
+        
+        if (gamepad2.left_trigger > 0){ 
             // Abaixada para pegar sample no chão
-            if (trava == 0){
+            if (trava == 2){
                 target = 150;
             }
         }
-        if (gamepad2.dpad_up) {
+        
+        if (gamepad2.dpad_up) { 
             // Subidinha do clipe da borda
             if (trava == 0){
-                target = 750;
+                target = 850;
             }
         }
-        if (gamepad2.dpad_down){
+        
+        if (gamepad2.dpad_down){ 
             // Abaixada da clipagem no alto e baixo
             if (trava == 0){
                 if (voltaclip){
@@ -311,7 +316,8 @@ public class teleopteste extends LinearOpMode {
                 }
             }
         }
-        if (gamepad2.a && gamepad2.right_trigger > 0){
+        
+        if (gamepad2.a && gamepad2.right_trigger > 0){ 
             // Coleta de specimen na borda
             if (trava == 0){
                 target = 550;
@@ -319,11 +325,13 @@ public class teleopteste extends LinearOpMode {
                 servo = 0.4;
             }
         }
-        if (gamepad1.b) {
-            //abaixa braco pra resetar
+        
+        if (gamepad1.b) { 
+            // Abaixa braco pra resetar
             target = -965;
             vipertarget = -785;
         }
+        
         if (gamepad1.back){
             braco.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             braco.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
