@@ -259,9 +259,9 @@ public class auto1 extends LinearOpMode {
                         Actions.runBlocking(trajectoryAction5);
                         target = 250;
                         if (bracoPos < 300) {
-                            vipertarget = 788;//830 800 790
+                            vipertarget = 780;//830 800 790
                             servo = 0.0;
-                            if (viperpos > 770){ //780 772
+                            if (viperpos > 765){ //780 772
                                 pegarS2 = true;
                             }
                         }
@@ -318,9 +318,9 @@ public class auto1 extends LinearOpMode {
                     }
                     if (estaci == true) {
                         Actions.runBlocking(trajectoryAction8);
-                        target = 985;
+                        target = 1220;
                         vbasket2 = false;
-                        if (bracoPos > 770){
+                        if (bracoPos > 1080){
                             vbasket2 = false;
                             vipertarget = 800;
                             if (viperpos > 700){
