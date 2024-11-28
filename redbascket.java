@@ -22,7 +22,7 @@ public class auto1 extends LinearOpMode {
     private VoltageSensor ControlHub_VoltageSensor;
 
     public static double
-            p = 0.002, d = 0.0001, i = 0, target = 0,
+            p = 0.0021, d = 0.0001, i = 0, target = 0,
             Kp = 0.0054, Kd = 0.0001, Ki = 0, vipertarget = 0;
     public static double f = 0.0004;
     public static double ticks_in_degree = 2140.0 / 90.0;
@@ -183,10 +183,10 @@ public class auto1 extends LinearOpMode {
                     start = false;
                     if (bracoPos > 1390) { //1450
                         claw.setPosition(1);
-                        servo = 0.8;
-                        if (clawPos > 0.6) {
-                            vipertarget = 5;
-                            if (viperpos < 100) {
+                        if (clawPos > 0.9) {
+                            vipertarget = 150;
+                            if (viperpos < 250) {
+                                servo = 0.7;
                                 Actions.runBlocking(trajectoryAction2);
                                 clipoff1 = true;
                             }
@@ -207,8 +207,8 @@ public class auto1 extends LinearOpMode {
                 }
                 if (pegarS1 == true) {
                     clipoff1 = false;
-                    target = 155; //170
-                    if (bracoPos < 216) { //200 180 219
+                    target = 140; //170
+                    if (bracoPos < 175) { //200 180 219
                         claw.setPosition(0);
                         if (clawPos < 0.1) {
                             claw.setPosition(0);
@@ -233,8 +233,8 @@ public class auto1 extends LinearOpMode {
                         basket1 = false;
                         target = 2310;
                         if (bracoPos > 1450){
-                            vipertarget = 1450; //1570
-                            if (viperpos > 1402) { //1410 1405 aqui
+                            vipertarget = 1430; //1570
+                            if (viperpos > 1385) { //1410 1405 aqui
                                 servo = 0.8;
                                 claw.setPosition(1);
                                 if (clawPos > 0.95) {
@@ -259,17 +259,17 @@ public class auto1 extends LinearOpMode {
                         Actions.runBlocking(trajectoryAction5);
                         target = 250;
                         if (bracoPos < 300) {
-                            vipertarget = 780;//830 800 790
+                            vipertarget = 710;//830 800 790
                             servo = 0.0;
-                            if (viperpos > 765){ //780 772
+                            if (viperpos > 685){ //780 772
                                 pegarS2 = true;
                             }
                         }
                     }
                if (pegarS2 == true) {
                         clipoff2 = false;
-                        target = 150;
-                        if (bracoPos < 199) {   //200
+                        target = 100;
+                        if (bracoPos < 215) {   //200
                             claw.setPosition(0);
                             if (clawPos < 0.1) {
                                 claw.setPosition(0);
@@ -294,8 +294,8 @@ public class auto1 extends LinearOpMode {
                         basket2 = false;
                         target = 2325; //2360
                    if (bracoPos > 1500){
-                       vipertarget = 1460; //1540
-                       if (viperpos > 1410) {
+                       vipertarget = 1440; //1540
+                       if (viperpos > 1385) {
                            servo = 0.8;
                            claw.setPosition(1);
                            if (clawPos > 0.95) {
