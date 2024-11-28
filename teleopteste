@@ -261,7 +261,7 @@ public class TELEOP_Regional extends LinearOpMode {
         if (gamepad2.x) {
             // SUBMERGIBLE MÉDIO
             if (trava != 1){
-                target = 350;
+                target = 250;
                 vipertarget = 800;
                 servo = 0;
                 BRACO = false;
@@ -272,7 +272,7 @@ public class TELEOP_Regional extends LinearOpMode {
         if (gamepad1.dpad_up) {
             // SUBMERGIBLE MAIS
             if (trava !=1) {
-                target = 350;
+                target = 250;
                 vipertarget = 1100;
                 BRACO = false;
                 trava = 2;
@@ -282,7 +282,7 @@ public class TELEOP_Regional extends LinearOpMode {
         if (gamepad2.dpad_left) {
             // SUBMERGIBLE MENOS
             if (trava !=1){
-                target = 350;
+                target = 250;
                 vipertarget = 500;
                 servo = 0;
                 BRACO = false;
@@ -293,7 +293,7 @@ public class TELEOP_Regional extends LinearOpMode {
         if (gamepad2.left_trigger > 0){
             // Abaixada para pegar sample no chão
             if (trava == 2){
-                target = 150;
+                target = 100;
             }
         }
 
@@ -339,6 +339,11 @@ public class TELEOP_Regional extends LinearOpMode {
             viper.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             target = 0;
             vipertarget = 0;
+        }
+        if (gamepad1.x) {
+            // Pegar samples que cairem dentro do robô
+            target = 500;
+            servo = 0;
         }
     }
 }
