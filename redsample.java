@@ -15,15 +15,15 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
-@Autonomous(name = "RedSample")
-public class auto3 extends LinearOpMode {
+@Autonomous(name = "BlueSample")
+public class auto4 extends LinearOpMode {
     PIDController bracocontroler = new PIDController(p, i, d);
     PIDController vipercontroller = new PIDController(Kp, Ki, Kd);
     private VoltageSensor ControlHub_VoltageSensor;
 
     public static double
             p = 0.002, d = 0.0001, i = 0, target = 0,
-            Kp = 0.0054, Kd = 0.0001, Ki = 0, vipertarget = 0;
+            Kp = 0.0046, Kd = 0.0001, Ki = 0, vipertarget = 0;
     public static double f = 0.0004;
     public static double ticks_in_degree = 2140.0 / 90.0;
     double servo = 0.8;
@@ -78,32 +78,31 @@ public class auto3 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // Inicializa subsistemas
-        ControlHub_VoltageSensor = hardwareMap.get(VoltageSensor.class, "Control Hub");
-        MecanumDrive mecanumDrive = new MecanumDrive(hardwareMap, new Pose2d(14, -62, Math.PI / 2));
+        MecanumDrive mecanumDrive = new MecanumDrive(hardwareMap, new Pose2d(-14, 62, Math.PI +Math.PI / 2));
         Garra garra = new Garra(hardwareMap);
         Motors motors = new Motors(hardwareMap);
 
         // Define trajeto do robô
         Action trajectoryAction1 = mecanumDrive.actionBuilder(mecanumDrive.pose)
-                .strafeToConstantHeading(new Vector2d(7, -37))
+                .strafeToConstantHeading(new Vector2d(-7, 37))
                 .build();
 
-        Action trajectoryAction2 = mecanumDrive.actionBuilder(new Pose2d(7, -37, Math.PI / 2))
-                .strafeToConstantHeading(new Vector2d(27, -34))
-                .splineToLinearHeading(new Pose2d(46, -12, Math.PI), Math.PI * 0)
+        Action trajectoryAction2 = mecanumDrive.actionBuilder(new Pose2d(-7, 37, Math.PI + Math.PI / 2))
+                .strafeToConstantHeading(new Vector2d(-27, 34))
+                .splineToLinearHeading(new Pose2d(-46, 12, Math.PI*0), Math.PI)
                 .waitSeconds(0.5)
-                .strafeToConstantHeading(new Vector2d(46, -55))
+                .strafeToConstantHeading(new Vector2d(-46, 55))
                 .waitSeconds(0.5)
-                .strafeToConstantHeading(new Vector2d(46, -19))
-                .splineToConstantHeading(new Vector2d(55, -14), Math.PI * 0) // vai pro 2 sample
-                .strafeToConstantHeading(new Vector2d(55, -55))//empurra
+                .strafeToConstantHeading(new Vector2d(-46, 19))
+                .splineToConstantHeading(new Vector2d(-55, 14), Math.PI) // vai pro 2 sample
+                .strafeToConstantHeading(new Vector2d(-55, 55))//empurra
                 .waitSeconds(0.5)
-                .strafeToConstantHeading(new Vector2d(55, -18))
-                .splineToConstantHeading(new Vector2d(60, -12), Math.PI * 0)// vai pro 3 sample
-                .strafeToConstantHeading(new Vector2d(61, -55)) // empurra
+                .strafeToConstantHeading(new Vector2d(-55, 18))
+                .splineToConstantHeading(new Vector2d(-60, 12), Math.PI)// vai pro 3 sample
+                .strafeToConstantHeading(new Vector2d(-61, 55)) //empurra
                 .waitSeconds(0.5)
-                .strafeToConstantHeading(new Vector2d(61, -20))
-                .strafeToConstantHeading(new Vector2d(61, -55))
+                .strafeToConstantHeading(new Vector2d(-61, 20))
+                .strafeToConstantHeading(new Vector2d(-61, 55))
                 .build();
 
 
