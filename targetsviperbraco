@@ -1,0 +1,78 @@
+package org.firstinspires.ftc.teamcode.testes;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorImplEx;
+import com.qualcomm.robotcore.hardware.Servo;
+
+@Config
+@TeleOp
+public class viper extends OpMode {
+    private PIDController Vipercontroller;
+    private PIDController Bracocontroller;
+
+    public static double Kp = 0, Ki = 0, Kd = 0;
+
+    public static int vipertarget = 0;
+
+    private DcMotorEx viper;
+    //BRACO encoderRev 8192 contagens por revolução
+    public static double p = 0, i = 0, d = 0;
+    public static double f = 0;
+
+    public static int Btarget = 0;
+    public static double viperBoost = 1; // Aumentar a vel do viper
+
+    private DcMotorEx braco;
+    //GARRA
+    private Servo claw1, claw2, claw;
+
+    @Override
+    public void init(){
+        Vipercontroller = new PIDController(Kp, Ki, Kd);
+        Bracocontroller = new PIDController(p, i, d);
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
+        viper = hardwareMap.get(DcMotorImplEx.class, "viper");
+        braco = hardwareMap.get(DcMotorImplEx.class, "braco");
+        claw1 = hardwareMap.get(Servo.class, "claw1");
+        claw2 = hardwareMap.get(Servo.class, "claw2");
+        claw = hardwareMap.get(Servo.class, "claw");
+    }
+
+    @Override
+    public void loop(){
+        Vipercontroller.setPID(Kp, Ki ,Kd);
+        Bracocontroller.setPID(p, i ,d);
+        int viperPos = viper.getCurrentPosition();
+        double pidV = Vipercontroller.calculate(viperPos, vipertarget);
+        pidV *= viperBoost;
+
+        int bracoPos = braco.getCurrentPosition() * -1;
+        double pidB = Bracocontroller.calculate(bracoPos, Btarget);
+        double ticks_in_degree = 2120 / 90.0;
+        double ff = Math.cos(Math.toRadians(Btarget / ticks_in_degree)) * f;
+
+        double clawPos = claw.getPosition();
+        double claw1Pos = claw1.getPosition();
+        double claw2Pos = claw2.getPosition();
+
+        double power = pidB + ff;
+        braco.setPower(power);
+        viper.setPower(pidV);
+
+        telemetry.addData("pos", bracoPos);
+        telemetry.addData("target", Btarget);
+        telemetry.addData("posviper", viperPos);
+        telemetry.addData("target", vipertarget);
+        telemetry.addData("clawpos", clawPos);
+        telemetry.addData("claw1pos", claw1Pos);
+        telemetry.addData("claw2pos", claw2Pos);
+        telemetry.update();
+    }
+}
